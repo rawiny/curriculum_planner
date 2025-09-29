@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Curriculum Planner
+{% endblock %}
+
+{% block body %}
+<div class="container mx-auto px-4 py-8 md:py-12">
+    <!-- Header Section -->
+    <header class="text-center mb-10">
+        <h1 class="text-4xl md:text-5xl font-bold text-slate-900">Curriculum Planner</h1>
+        <p class="mt-2 text-lg text-slate-600">Enter your academic record to generate an optimal plan for your next term.</p>
+    </header>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <!-- Left Column: User Inputs -->
+        <div class="flex flex-col gap-8">
+            <!-- Card for Adding Courses -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-2xl font-semibold mb-4">1. Add Your Completed Courses</h2>
+                <form method="POST" action="/add_course" id="courseForm" class="flex flex-col sm:flex-row items-end gap-4">
+                    <div class="w-full">
+                        <label for="course" class="block text-sm font-medium text-slate-700">Course Code</label>
+                        <input type="text" id="course" name="course" required placeholder="e.g., CS101" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                    </div>
+                    <div class="w-full sm:w-24">
+                        <label for="grade" class="block text-sm font-medium text-slate-700">Grade</label>
+                        <select id="grade" name="grade" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                            <option value="A">A</option>
+                            <option value="B+">B+</option>
+                            <option value="B">B</option>
+                            <option value="C+">C+</option>
+                            <option value="C">C</option>
+                            <option value="D+">D+</option>
+                            <option value="D">D</option>
+                            <option value="F">F</option>
+                            <option value="S">S</option>
+                            <option value="U">U</option>
+                            <option value="W">W</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full sm:w-auto bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Add
+                    </button>
+                </form>
+            </div>
+
+            <!-- Card for Generating the Plan -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-2xl font-semibold mb-4">2. Generate Your Plan</h2>
+                <p class="text-slate-600 mb-4">Enter the number of terms you have already studied and your desired minor, then click generate.</p>
+                <form method="POST" action="/" class="flex flex-col sm:flex-row items-end gap-4">
+                    <div class="w-full">
+                        <label for="term" class="block text-sm font-medium text-slate-700">Terms Already Studied</label>
+                        <input type="number" id="term" name="term" required placeholder="e.g., 5" min="0" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                        <label for="minors" class="block text-sm font-medium text-slate-700">Minor</label>
+                        <select id="minors" name="minors" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                            {% for minor in minors %}
+                                <option value="{{ minor }}">{{ minor.capitalize() }}</option>
+                            {% endfor %}
+                        </select>                        
+                    </div>
+                    <button type="submit" class="w-full sm:w-auto flex items-center justify-center gap-2 bg-green-600 text-white font-semibold py-2 px-6 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd" />
+                        </svg>
+                        Generate
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column: Results -->
+        <div class="flex flex-col gap-8">
+            <!-- Card for Added Courses Table -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-2xl font-semibold mb-4">Your Academic Record</h2>
+                {% if courses|length < 1 %}
+                    <p class="text-slate-500">Your added courses will appear here.</p>
+                {% else %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm text-left">
+                        <thead class="bg-slate-100 text-slate-600 uppercase tracking-wider">
+                            <tr>
+                                <th scope="col" class="px-6 py-3">Course</th>
+                                <th scope="col" class="px-6 py-3">Grade</th>
+                                <th scope="col" class="px-6 py-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="courseTableBody">
+                            {% for course in courses %}
+                            <tr class="border-b border-slate-200 hover:bg-slate-50">
+                                <td class="px-6 py-4 font-medium text-slate-900">{{ course }}</td>
+                                <td class="px-6 py-4">{{ courses[course] }}</td>
+                                <td class="px-6 py-4 text-right">
+                                    <a href="/remove_course/{{ course }}" class="text-red-500 hover:text-red-700 font-medium">Remove</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Card for Optimal Plan -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <h2 class="text-2xl font-semibold mb-4">Recommended Courses for Next Term</h2>
+                {% if optimal_modules %}
+                    <div class="flex flex-wrap gap-3">
+                        {% for module in optimal_modules %}
+                            <span class="inline-block bg-blue-100 text-blue-800 text-md font-semibold px-4 py-2 rounded-full">
+                                {{ module }}
+                            </span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-slate-500">Your generated plan will appear here after you click "Generate".</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Section for Project Information -->
+    <footer class="mt-16 pt-8 border-t border-slate-200">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-slate-600 text-sm">
+            <!-- About the Project Column -->
+            <div>
+                <h3 class="font-semibold text-slate-900 mb-2">About this Project</h3>
+                <p>This tool uses an Integer Programming model to generate optimal course plans. It is based on the <a href="{{ url_for('static', filename='data/BSc_Applied_Maths_Curriculum_2561.pdf') }}" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-800 font-medium">BSc Applied Maths curriculum (2561) at Thammasat University</a> and can be adapted for any curriculum with a similar data structure.</p>
+                <a href="https://li01.tci-thaijo.org/index.php/science_kmitl/article/view/266381" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-800 font-medium mt-2 inline-block">Read the Research Paper &rarr;</a>
+            </div>
+            <!-- Project Members Column -->
+            <div>
+                <h3 class="font-semibold text-slate-900 mb-2">Project Members</h3>
+                <ul class="space-y-1">
+                    <li>Phatthawarin Thongkamton</li>
+                    <li>Manisa Sudawan</li>
+                    <li>Supapich Kruesri</li>
+                </ul>
+            </div>
+            <!-- Supervisor Column -->
+            <div>
+                <h3 class="font-semibold text-slate-900 mb-2">Supervised By</h3>
+                <p>Rawin Youngnoi</p>
+            </div>
+        </div>
+        <div class="mt-8 text-center text-xs text-slate-500">
+            <p>Project developed from Jan - Dec 2024.</p>
+            <p class="mt-1">&copy; 2025 Curriculum Planner. All Rights Reserved.</p>
+        </div>
+    </footer>
+</div>
+{% endblock %}
+
